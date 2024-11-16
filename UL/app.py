@@ -1,40 +1,37 @@
+# streamlit_app.py
 import streamlit as st
 import requests
 
-# FastAPI URL for prediction endpoint
-api_url = "https://api-nx09.onrender.com/predict"
+# FastAPI server URL
+FASTAPI_URL = "http://127.0.0.1:8000/predict"
 
-# Streamlit UI
-st.title("Football Player Prediction Model")
-st.write("Welcome to the prediction app! Enter the details below to make a prediction.")
+# Title of the Streamlit app
+st.title("Player Prediction")
 
-# Input fields for the user
-age = st.number_input("Age", min_value=18, max_value=40, step=1)
-appearance = st.number_input("Appearance", min_value=0, max_value=500, step=1)
-goals = st.number_input("Goals", min_value=0, max_value=300, step=1)
-minutes_played = st.number_input("Minutes Played", min_value=0, max_value=50000, step=1)
-highest_valuated_price_euro = st.number_input("Highest Valuated Price (Euro)", min_value=0.0, step=0.1)
+# Input fields for the user to provide feature values
+age = st.number_input("Age", min_value=0, max_value=100, value=25)
+appearance = st.number_input("Appearance", min_value=0, max_value=500, value=50)
+goals = st.number_input("Goals", min_value=0, max_value=100, value=20)
+minutes_played = st.number_input("Minutes Played", min_value=0, max_value=5000, value=1500)
 price_category = st.selectbox("Price Category", options=["Premium", "Mid", "Budget"])
 
-# When the user clicks on the "Predict" button
-if st.button("Predict"):
-    # Prepare the data to be sent to the FastAPI backend
-    input_data = {
-        "age": age,
-        "appearance": appearance,
-        "goals": goals,
-        "minutes_played": minutes_played,
-        "Highest_valuated_price_euro": highest_valuated_price_euro,
-        "price_category": price_category
-    }
+# Collect the inputs into a dictionary
+input_data = {
+    "age": age,
+    "appearance": appearance,
+    "goals": goals,
+    "minutes_played": minutes_played,
+    "price_category": price_category
+}
+
+# Button to trigger prediction
+if st.button("Predict Player Value"):
+    # Send the data to the FastAPI backend for prediction
+    response = requests.post(FASTAPI_URL, json=input_data)
     
-    # Send a POST request to the FastAPI prediction endpoint
-    response = requests.post(api_url, json=input_data)
-    
+    # Check if the request was successful
     if response.status_code == 200:
-        # If the prediction is successful, display the result
-        prediction = response.json()["pred"]
-        st.write(f"Prediction: {prediction}")
+        prediction = response.json()
+        st.write(f"Predicted Value: {prediction['pred']} Euro")
     else:
-        # Handle errors (e.g., if the API is down)
-        st.error(f"Error: {response.status_code}. Unable to get prediction.")
+        st.write("Error in prediction. Please try again.")
